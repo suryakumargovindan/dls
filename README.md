@@ -1,1 +1,1 @@
-# Deep Learning Based Serverless Framework (DLS)
+# Deep Learning Based Serverless (DLS) Framework
