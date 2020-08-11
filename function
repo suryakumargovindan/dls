@@ -5,7 +5,6 @@ import os
 import time
 import csv
 from datetime import datetime
-import requests
 import redis
 from os import path
 
@@ -125,7 +124,7 @@ def logger(cmd2):
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
 
-    print "Installing required libraries...\n"
+    print ("Installing required libraries...\n")
 
     os.system(cmd2)
 
@@ -144,7 +143,7 @@ def libraries(container):
     lib = cont.split()
 
     if not lib:
-        print ("No dependent libraries to install..")
+        print ("No dependent libraries detected to install..")
         install_time = 0;
 
     else:
@@ -238,7 +237,7 @@ def execute(container,request): #to execute the function and then stop the conta
     cmd0 = "docker cp {0} {1}:/".format(request, container)
     os.popen(cmd0)
 
-    print "\n"
+    print ("\n")
 
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
