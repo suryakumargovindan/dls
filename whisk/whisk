@@ -59,7 +59,7 @@ def resource():
 
     print ("\n")
 
-    print ("Total time of execution in OpenWhisk is - "+str(exec_time)+"ms"\n)
+    print ("Total time of execution in OpenWhisk is - "+str(exec_time)+"ms\n")
 
     with open('whisk_list.csv', 'a') as file:
         writer = csv.writer(file)
