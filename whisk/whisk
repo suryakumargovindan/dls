@@ -44,17 +44,17 @@ def resource():
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
 
-    cmd2 = "sudo wsk -i action create helloPython --kind python:3 {} && echo $(($(date +%s%N)/1000000)) > /tmp/whisk_log".format(function)
+    cmd2 = "sudo wsk -i action create helloWorld --kind python:3 {} && echo $(($(date +%s%N)/1000000)) > /tmp/whisk_log".format(function)
     os.system(cmd2)
 
-    cmd3 = "sudo wsk -i action invoke helloPython --blocking"
+    cmd3 = "sudo wsk -i action invoke helloWorld --blocking"
     os.popen(cmd3).read().strip()
 
     cmd4 = ("sudo cat /tmp/whisk_log")
     exec_end = os.popen(cmd4).read().strip()
     exec_time = (int(exec_end)-int(exec_start))
 
-    cmd5 = "sudo wsk -i action delete helloPython"
+    cmd5 = "sudo wsk -i action delete helloWorld"
     os.system(cmd5)
 
     #print (req_time +" "+str(exec_time)+"ms")
