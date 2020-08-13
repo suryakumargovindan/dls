@@ -144,11 +144,10 @@ def libraries(container):
     lib = cont.split()
     
     #print(lib)
-    
+
     if not lib:
-        print ("No dependent libraries detected to install..")
+        print("No dependent libraries found to install...")
         install_time = 0;
-        return(install_time)
 
     else:
 
@@ -181,8 +180,20 @@ def libraries(container):
 
                     cache(x, install_time)
 
-        return(install_time)
+                else:
 
+                    # Dowload, install and call the cache.py
+
+                    print("Downloading libraries as it's not found in cache...\n")
+
+                    cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(
+                        container, x)
+
+                    install_time = logger(cmd)
+
+                    cache(x, install_time)
+
+    return (install_time)
 
 def resource(env):
     
@@ -228,7 +239,7 @@ def resource(env):
 
     total_time = int(install_time) + int(execution_time) #Calculate total execution time
 
-    with open('functions_list.csv', 'a') as file:
+    with open('/function/test/functions_list.csv', 'a') as file:
         writer = csv.writer(file)
         writer.writerow([request_time, function, total_time, execution_type])
 
@@ -240,7 +251,7 @@ def execute(container,request): #to execute the function and then stop the conta
     cmd0 = "docker cp {0} {1}:/".format(request, container)
     os.popen(cmd0)
 
-    print ("\n")
+    print "\n"
 
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
@@ -364,4 +375,4 @@ def cache(lib, install_time):
 
 
 env = runtime()
-resource(env)
+pulse = resource(env)
