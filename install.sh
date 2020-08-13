@@ -82,7 +82,7 @@ sudo apt --assume-yes install python-pip
 
 #Install OpenWhisk client
 
-client = wsk
+client=wsk
 
 if [ -f "$client" ]; then
 
