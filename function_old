@@ -145,49 +145,43 @@ def libraries(container):
     
     #print(lib)
     
-    for x in lib:
-    
-        response = requests.get("https://pypi.org/pypi/{}/json".format(x))
-    
-        if response.status_code == 200:  # Checks if the library is valid
-    
-            #call cache.py here and install libraries in the new container
-    
-            lib_cpath = x + '_cpath'
-    
-            if r3.exists(lib_cpath) == True:
-                ## Use the path, install and call cache.py
-    
-                whl_path = r3.get(lib_cpath)
-    
-                splt_char = "/"
-                K = 3
-    
-                temp = whl_path.split(splt_char)
-                res = splt_char.join(temp[:K]), splt_char.join(temp[K:])
-    
-                whl = '/cache/' + res[1]
+    if not lib:
+        print ("No dependent libraries detected to install..")
+        install_time = 0;
 
-                cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,whl)
+    else:
 
-                install_time = logger(cmd)
+        for x in lib:
 
-                cache(x, install_time)
+            response = requests.get("https://pypi.org/pypi/{}/json".format(x))
 
-    
-            else:
-                
-                #Dowload, install and call the cache.py
+            if response.status_code == 200:  # Checks if the library is valid
 
-                print("Downloading libraries as it's not found in cache...\n")
+                #call cache.py here and install libraries in the new container
 
-                cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,x)
+                lib_cpath = x + '_cpath'
 
-                install_time = logger(cmd)
+                if r3.exists(lib_cpath) == True:
+                    ## Use the path, install and call cache.py
 
-                cache(x, install_time)
+                    whl_path = r3.get(lib_cpath)
 
-        return (install_time)
+                    splt_char = "/"
+                    K = 3
+
+                    temp = whl_path.split(splt_char)
+                    res = splt_char.join(temp[:K]), splt_char.join(temp[K:])
+
+                    whl = '/cache/' + res[1]
+
+                    cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,whl)
+
+                    install_time = logger(cmd)
+
+                    cache(x, install_time)
+
+    return(install_time)
+
 
 def resource(env):
     
@@ -233,7 +227,7 @@ def resource(env):
 
     total_time = int(install_time) + int(execution_time) #Calculate total execution time
 
-    with open('/function/test/functions_list.csv', 'a') as file:
+    with open('functions_list.csv', 'a') as file:
         writer = csv.writer(file)
         writer.writerow([request_time, function, total_time, execution_type])
 
@@ -245,7 +239,7 @@ def execute(container,request): #to execute the function and then stop the conta
     cmd0 = "docker cp {0} {1}:/".format(request, container)
     os.popen(cmd0)
 
-    print "\n"
+    print ("\n")
 
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
@@ -369,4 +363,4 @@ def cache(lib, install_time):
 
 
 env = runtime()
-pulse = resource(env)
+resource(env)
