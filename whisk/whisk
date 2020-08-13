@@ -57,7 +57,9 @@ def resource():
     cmd5 = "sudo wsk -i action delete helloWorld"
     os.system(cmd5)
 
-    print ("Total time of execution in OpenWhisk is - "+str(exec_time)+"ms")
+    print ("\n")
+
+    print ("Total time of execution in OpenWhisk is - "+str(exec_time)+"ms"\n)
 
     with open('whisk_list.csv', 'a') as file:
         writer = csv.writer(file)
