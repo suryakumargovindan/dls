@@ -82,25 +82,17 @@ sudo apt --assume-yes install python-pip
 
 #Install OpenWhisk client
 
-client=OpenWhisk_CLI-1.0.0-linux-386.tgz
+client = wsk
 
 if [ -f "$client" ]; then
-	
-	sudo tar -xvf $client 
 
-	if [ $? -eq 0 ]; then
-		sudo cp wsk /usr/bin
-	else
-        	echo ""
-	        echo "OpenWhisk Client could not be extracted properly! Please download it manually!"
-	        exit
-	fi
+	sudo cp wsk /usr/bin
 else
-	echo "OpenWhisk client file does not exist! Please download it manually!"
-	
+        echo ""
+        echo "OpenWhisk Client could not be configured properly! Please download it manually!"
+        exit
 fi
-
-
+	
 #Configure OpenWhisk client
 
 sudo wsk property set --apihost 'localhost' --auth '23bc46b1-71f6-4ed5-8c54-816aa4f8c502:123zO3xZCLrMN6v2BKK1dXYFpXlPkccOFqm12CdAsMgRU4VrNZ9lyGVCGuMDGIwP'
