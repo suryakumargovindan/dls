@@ -239,7 +239,7 @@ def resource(env):
 
     total_time = int(install_time) + int(execution_time) #Calculate total execution time
 
-    with open('/function/test/functions_list.csv', 'a') as file:
+    with open('functions_list.csv', 'a') as file:
         writer = csv.writer(file)
         writer.writerow([request_time, function, total_time, execution_type])
 
