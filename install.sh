@@ -118,24 +118,16 @@ sudo sed -i 's/6379/6370/g' incubator-openwhisk-devtools/docker-compose/docker-c
 sudo sed -i 's/6379/6370/g' incubator-openwhisk-devtools/docker-compose/docker-compose.packages.yml
 
 #Install OpenWhisk
-<<<<<<< HEAD
-sudo nohup make -C incubator-openwhisk-devtools/docker-compose/ quick-start > install.log &
-=======
 sudo nohup make -C incubator-openwhisk-devtools/docker-compose/ quick-start > whisk_install.log &
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
 
 #Verify OpenWhisk installation
 
 if [ $? -eq 0 ]; then
-<<<<<<< HEAD
-	echo -e "\nOpenWhisk components are being installed! Please check the progress in install.log file!\n"
-=======
-	echo -e "\nOpenWhisk components are being installed! Please check the progress in whisk_install.log file!\n"
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
-else 
-	echo ""
-	echo "OpenWhisk installation is not running! Please run this script again!"
-	exit
+        echo -e "\nOpenWhisk components are being installed! Please check the progress in whisk_install.log file!\n"
+else
+        echo ""
+        echo "OpenWhisk installation is not running! Please run this script again!"
+        exit
 fi
 
 
