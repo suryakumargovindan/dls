@@ -5,15 +5,9 @@ import os
 import time
 import csv
 from datetime import datetime
-<<<<<<< HEAD
 import requests
 import redis
 from os import path
-=======
-import redis
-from os import path
-import requests
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
 
 r1 = redis.StrictRedis(host='localhost', port=6379, db=1)
 r2 = redis.StrictRedis(host='localhost', port=6379, db=2)
@@ -131,11 +125,7 @@ def logger(cmd2):
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
 
-<<<<<<< HEAD
     print "Installing required libraries...\n"
-=======
-    print ("Installing required libraries...\n")
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
 
     os.system(cmd2)
 
@@ -152,56 +142,9 @@ def libraries(container):
     cmd = "cat %s | grep ^import | sed -e 's/import//g' | sed 's/ //g'" % (function)
     cont = os.popen(cmd).read().strip()
     lib = cont.split()
-<<<<<<< HEAD
     
     #print(lib)
     
-    for x in lib:
-    
-        response = requests.get("https://pypi.org/pypi/{}/json".format(x))
-    
-        if response.status_code == 200:  # Checks if the library is valid
-    
-            #call cache.py here and install libraries in the new container
-    
-            lib_cpath = x + '_cpath'
-    
-            if r3.exists(lib_cpath) == True:
-                ## Use the path, install and call cache.py
-    
-                whl_path = r3.get(lib_cpath)
-    
-                splt_char = "/"
-                K = 3
-    
-                temp = whl_path.split(splt_char)
-                res = splt_char.join(temp[:K]), splt_char.join(temp[K:])
-    
-                whl = '/cache/' + res[1]
-
-                cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,whl)
-
-                install_time = logger(cmd)
-
-                cache(x, install_time)
-
-    
-            else:
-                
-                #Dowload, install and call the cache.py
-
-                print("Downloading libraries as it's not found in cache...\n")
-
-                cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,x)
-
-                install_time = logger(cmd)
-
-                cache(x, install_time)
-
-        return (install_time)
-
-=======
-
     if not lib:
         print ("No dependent libraries detected to install..")
         install_time = 0;
@@ -240,8 +183,6 @@ def libraries(container):
     return(install_time)
 
 
-    
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
 def resource(env):
     
     
@@ -286,11 +227,7 @@ def resource(env):
 
     total_time = int(install_time) + int(execution_time) #Calculate total execution time
 
-<<<<<<< HEAD
-    with open('/function/test/functions_list.csv', 'a') as file:
-=======
     with open('functions_list.csv', 'a') as file:
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
         writer = csv.writer(file)
         writer.writerow([request_time, function, total_time, execution_type])
 
@@ -302,11 +239,7 @@ def execute(container,request): #to execute the function and then stop the conta
     cmd0 = "docker cp {0} {1}:/".format(request, container)
     os.popen(cmd0)
 
-<<<<<<< HEAD
-    print "\n"
-=======
     print ("\n")
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc
 
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
@@ -430,8 +363,4 @@ def cache(lib, install_time):
 
 
 env = runtime()
-<<<<<<< HEAD
-pulse = resource(env)
-=======
 resource(env)
->>>>>>> 5db2a0f2ddce219d1e90afb9d2fd12d14a2f65bc

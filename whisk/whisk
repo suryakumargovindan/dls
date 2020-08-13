@@ -48,7 +48,7 @@ def resource():
     os.system(cmd2)
 
     cmd3 = "sudo wsk -i action invoke helloWorld --blocking"
-    os.popen(cmd3).read().strip()
+    os.system(cmd3)
 
     cmd4 = ("sudo cat /tmp/whisk_log")
     exec_end = os.popen(cmd4).read().strip()
@@ -57,7 +57,7 @@ def resource():
     cmd5 = "sudo wsk -i action delete helloWorld"
     os.system(cmd5)
 
-    #print (req_time +" "+str(exec_time)+"ms")
+    print ("Total time of execution in OpenWhisk is - "+str(exec_time)+"ms")
 
     with open('whisk_list.csv', 'a') as file:
         writer = csv.writer(file)
