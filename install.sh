@@ -86,7 +86,7 @@ client=wsk
 
 if [ -f "$client" ]; then
 
-	sudo cp wsk /usr/bin
+	sudo cp bin/wsk /usr/bin
 else
         echo ""
         echo "OpenWhisk Client could not be configured properly! Please download it manually!"
