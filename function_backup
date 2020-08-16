@@ -4,9 +4,10 @@ import sys
 import os
 import time
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import redis
+import pandas as pd
 from os import path
 
 r1 = redis.StrictRedis(host='localhost', port=6379, db=1)
@@ -143,47 +144,57 @@ def libraries(container):
     cont = os.popen(cmd).read().strip()
     lib = cont.split()
     
-    for x in lib:
-    
-        response = requests.get("https://pypi.org/pypi/{}/json".format(x))
-    
-        if response.status_code == 200:  # Checks if the library is valid
-    
-            #call cache.py here and install libraries in the new container
-    
-            lib_cpath = x + '_cpath'
-    
-            if r3.exists(lib_cpath) == True:
-                ## Use the path, install and call cache.py
-    
-                whl_path = r3.get(lib_cpath)
-    
-                splt_char = "/"
-                K = 3
-    
-                temp = whl_path.split(splt_char)
-                res = splt_char.join(temp[:K]), splt_char.join(temp[K:])
-    
-                whl = '/cache/' + res[1]
+    #print(lib)
 
-                cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,whl)
+    if not lib:
+        print("No dependent libraries found to install...")
+        install_time = 0;
 
-                install_time = logger(cmd)
+    else:
 
-                cache(x, install_time)
+        for x in lib:
 
-    
-            else:
-                
-                print("Downloading libraries as it's not found in cache...\n")
+            response = requests.get("https://pypi.org/pypi/{}/json".format(x))
 
-                cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,x)
+            if response.status_code == 200:  # Checks if the library is valid
 
-                install_time = logger(cmd)
+                #call cache.py here and install libraries in the new container
 
-                cache(x, install_time)
+                lib_cpath = x + '_cpath'
 
-        return (install_time)
+                if r3.exists(lib_cpath) == True:
+                    ## Use the path, install and call cache.py
+
+                    whl_path = r3.get(lib_cpath)
+
+                    splt_char = "/"
+                    K = 3
+
+                    temp = whl_path.split(splt_char)
+                    res = splt_char.join(temp[:K]), splt_char.join(temp[K:])
+
+                    whl = '/cache/' + res[1]
+
+                    cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(container,whl)
+
+                    install_time = logger(cmd)
+
+                    cache(x, install_time)
+
+                else:
+
+                    # Dowload, install and call the cache.py
+
+                    print("Downloading libraries as it's not found in cache...\n")
+
+                    cmd = "docker exec {0} pip install {1} && echo $(($(date +%s%N)/1000000)) > /tmp/pip_log".format(
+                        container, x)
+
+                    install_time = logger(cmd)
+
+                    cache(x, install_time)
+
+    return (install_time)
 
 def resource(env):
     
@@ -219,8 +230,8 @@ def resource(env):
 
         execution_type = "cold"
         
-        container = 'warm0_10_python2'
-        cmd = "docker run -v /root/.cache/:/cache/ -dit --name %s python:2.7-alpine"%container
+        container = 'warm0_1_python3'
+        cmd = "docker run -v /root/.cache/:/cache/ -dit --name %s python:rc-alpine3.12"%container
         os.popen(cmd)
 
 
@@ -229,7 +240,7 @@ def resource(env):
 
     total_time = int(install_time) + int(execution_time) #Calculate total execution time
 
-    with open('/function/test/functions_list.csv', 'a') as file:
+    with open('functions_list.csv', 'a') as file:
         writer = csv.writer(file)
         writer.writerow([request_time, function, total_time, execution_type])
 
@@ -249,8 +260,6 @@ def execute(container,request): #to execute the function and then stop the conta
     print ("Output of the execution is:\n")
     print ("{")
 
-    #cmd2 = "docker exec -i {0} python /{1} && echo $(($(date +%s%N)/1000000)) > /tmp/exec_log".format(container,request)
-    #request = "/test.py"
     cmd2 = "docker exec -i {0} python /{1} && echo $(($(date +%s%N)/1000000)) > /tmp/exec_log".format(container,request)
     os.system(cmd2)
 
@@ -365,27 +374,26 @@ def cache(lib, install_time):
         r1.exists(lib_cpath)
         #print (path)
 
-
 def forecast():
 
     header_list = ["time"]
     filename = "forecast.csv"
     df = pd.read_csv(filename,names=header_list)
-
+    
     for i in range(len(df)):
-
+    
         x = (df.loc[i, "time"])
         time = datetime.strptime(x,'%H:%M:%S')
         result = time - timedelta(seconds=4)
         result_time = str(result).split(' ',1)
         y = result_time[1]
-
+    
         schedule = y.split(':',2)
         hour = schedule[0]
         minute = schedule[1]
         second = schedule[2]
-
-        cmd = "echo 'sleep {0}; docker run -v /root/.cache/:/cache/ -dit --name warm0_10_python3 python:rc-alpine3.12; docker exec warm0_10_python2 pip install sql' | at {1}:{2}".format(second, hour, minute)
+    
+        cmd = "echo 'sleep {0}; docker run -v /root/.cache/:/cache/ -dit --name warm0_10_python3 python:rc-alpine3.12; docker exec warm0_10_python3 pip3 install sql' | at {1}:{2}".format(second, hour, minute)
         print ("One container(s) scheduled to start at "+str(y)+"")
 
 
