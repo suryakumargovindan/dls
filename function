@@ -358,6 +358,13 @@ def cache(lib, install_time):
 
         r4.set(lib_last_used,today)
 
+        cmd = "sudo find /root/.cache/pip/wheels -name '*.whl' |grep -i %s-"%lib
+        result = os.popen(cmd).read().strip()
+        cpath = result.split()
+
+        if path.exists(cpath[0]):
+            r3.set(lib_cpath,cpath[0])
+
     now = datetime.now()
     today = now.strftime("%Y-%m-%d")
     last_used = r4.get(lib_last_used)
