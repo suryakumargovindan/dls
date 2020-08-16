@@ -80,6 +80,7 @@ sudo apt --assume-yes install make
 sudo apt --assume-yes install zip
 sudo apt --assume-yes install python-pip
 sudo pip install requests
+sudo pip install sql
 sudo pip install redis
 sudo pip install pandas
 
