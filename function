@@ -441,7 +441,7 @@ def forecast():
         minute = schedule[1]
         second = schedule[2]
 
-        cmd = "echo 'sleep {0}; docker run -v /root/.cache/:/cache/ -dit --name dls_warm0_10_python python:rc-alpine3.12; docker exec dls_warm0_10_python pip install sql' | at {1}:{2}".format(second, hour, minute)
+        cmd = "echo 'sleep {0}; docker run -v /root/.cache/:/cache/ -dit --name dls_warm0_10_python python:2.7-alpine; docker exec dls_warm0_10_python pip install sql' | at {1}:{2}".format(second, hour, minute)
         print ("One container(s) scheduled to start at "+str(y)+"")
 
 
