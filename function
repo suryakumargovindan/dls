@@ -6,10 +6,11 @@ import sys
 import os
 import time
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta 
 import requests
 import redis
 from os import path
+import pandas as pd
 
 
 # Create different databases in Redis to store cache information of libraries
@@ -28,12 +29,11 @@ dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
 request_time = dt_string
 
 
-if len(sys.argv) == 2:
+if len(sys.argv) >= 2:
     function = sys.argv[1] 
 
 
 # Function to check the runtime of the function and validate if it is the right input
-
 
 def runtime():
 
@@ -202,7 +202,7 @@ def resource(env):
     warm = os.popen(cmd1).read().strip()
 
 
-    if int(warm) == 1:   #This means at least one warm container is present
+    if int(warm) >= 1:   #This means at least one warm container is present
 
         execution_type = "warm"
 
@@ -223,7 +223,7 @@ def resource(env):
 
         execution_type = "cold"
         
-        container = 'warm0_10_python2'  # Name allocated for first cold container created
+        container = 'dls_warm0_10_python'  # Name allocated for first cold container created
         cmd = "docker run -v /root/.cache/:/cache/ -dit --name %s python:2.7-alpine"%container
         os.popen(cmd)
 
@@ -371,7 +371,7 @@ def cache(lib, install_time):
         r1.exists(lib_cpath)
 
 
-# Forecast function to start containers according to time scheduled in forecast.csv
+# Forecast function to start containers according to times scheduled in forecast.csv
 
 def forecast():
 
@@ -379,11 +379,53 @@ def forecast():
     filename = "forecast.csv"
     df = pd.read_csv(filename,names=header_list)
 
+    t_setup = 0;
+
+    if len(sys.argv) == 3:
+
+        forecast_function = sys.argv[2]
+
+        if path.exists(forecast_function):
+
+            ext = forecast_function.split('.')
+
+            if len(ext) > 1:
+                runtime = ext[1]
+
+                if runtime == 'py':
+                    
+                    cmd = "cat %s | grep ^import | sed -e 's/import//g' | sed 's/ //g'" % (forecast_function)
+                    cont = os.popen(cmd).read().strip()
+                    lib = cont.split()
+
+                    #calculate the total t_setup time for all libraries, before which the container should be started
+
+                    for x in lib:
+
+                        lib_install_time = x+'_install_time'
+
+                        if r5.exists(lib_install_time):
+                            time  = r5.get(lib_install_time)
+
+                        else:
+                            time = 0;
+                        
+                        t_setup += int(time);
+                
+                else:
+                    print ("\nCannot forecast times for "+forecast_function+", as it is not a Python script! Quitting!\n")
+                    exit()
+        else:
+            print ("\nFunction "+forecast_function+" does not exist! Quitting!\n")
+            exit()
+
+    delay = (int(t_setup)/1000)     #total value of t_setup in seconds
+
     for i in range(len(df)):
 
         x = (df.loc[i, "time"])
         time = datetime.strptime(x,'%H:%M:%S')
-        result = time - timedelta(seconds=4)
+        result = time - timedelta(seconds=delay)  #Calculate the timestamp before t_setup seconds 
         result_time = str(result).split(' ',1)
         y = result_time[1]
 
@@ -392,7 +434,7 @@ def forecast():
         minute = schedule[1]
         second = schedule[2]
 
-        cmd = "echo 'sleep {0}; docker run -v /root/.cache/:/cache/ -dit --name warm0_10_python3 python:rc-alpine3.12; docker exec warm0_10_python2 pip install sql' | at {1}:{2}".format(second, hour, minute)
+        cmd = "echo 'sleep {0}; docker run -v /root/.cache/:/cache/ -dit --name dls_warm0_10_python python:rc-alpine3.12; docker exec dls_warm0_10_python pip install sql' | at {1}:{2}".format(second, hour, minute)
         print ("One container(s) scheduled to start at "+str(y)+"")
 
 

@@ -83,10 +83,11 @@ sudo pip install requests
 sudo pip install sql
 sudo pip install redis
 sudo pip install pandas
+sudo pip install datetime
 
 #Install OpenWhisk client
 
-client=wsk
+client=bin/wsk
 
 if [ -f "$client" ]; then
 
