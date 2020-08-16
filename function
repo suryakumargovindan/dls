@@ -331,21 +331,21 @@ def cache(lib, install_time):
 
         count = int(r2.get(lib_count))
 
-        if count >= 2:
+        if count >= 5:
 
             r1.set(lib_freq,'FREQUENT')
             r4.set(lib_last_used,today)
 
             # Find the cache path, update it in redis and retain the cache
 
-            cmd = "find ~/.cache/pip/wheels -name '*.whl' |grep -i %s-"%lib
+            cmd = "sudo find /root/.cache/pip/wheels -name '*.whl' |grep -i %s-"%lib
             result = os.popen(cmd).read().strip()
             cpath = result.split()
 
             if path.exists(cpath[0]):
                 r3.set(lib_cpath,cpath[0])
 
-        elif count < 2:
+        elif count < 5:
 
             count += 1
             r2.set(lib_count,count)
