@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+#Code for the DLS Framework
+
 import sys
 import os
 import time
@@ -8,6 +10,9 @@ from datetime import datetime
 import requests
 import redis
 from os import path
+
+
+# Create different databases in Redis to store cache information of libraries
 
 r1 = redis.StrictRedis(host='localhost', port=6379, db=1)
 r2 = redis.StrictRedis(host='localhost', port=6379, db=2)
@@ -23,12 +28,11 @@ dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
 request_time = dt_string
 
 
-#print (sys.argv[0])
-#print (arg_count)
-#exit()
-
 if len(sys.argv) == 2:
     function = sys.argv[1] 
+
+
+# Function to check the runtime of the function and validate if it is the right input
 
 
 def runtime():
@@ -42,6 +46,9 @@ def runtime():
 
             if len(ext) > 1:
                 runtime = ext[1]
+
+
+    # Run the code only when it is a Python script, else quit execution
 
                 if runtime == 'py':
                     print("\nRuntime is Python!\n")
@@ -106,6 +113,8 @@ def runtime():
         exit()
 
 
+# check whether the warm container identified is occupied or free
+
 def container_pulse(container):
 
     cmd = "ps -ef | grep %s | grep docker | wc -l"%(container)
@@ -120,6 +129,8 @@ def container_pulse(container):
 
 
 
+# Calculate the total tunraround time for executing a function
+
 def logger(cmd2):
 
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
@@ -128,14 +139,13 @@ def logger(cmd2):
     print "Installing required libraries...\n"
 
     os.system(cmd2)
-
     cmd3 = ("cat /tmp/pip_log")
     exec_end = os.popen(cmd3).read().strip()
-
     time = (int(exec_end) - int(exec_start))
-
     return (time)
 
+
+# Check the validity of the dependent libraries used in the Python script
 
 def libraries(container):
     
@@ -149,12 +159,9 @@ def libraries(container):
     
         if response.status_code == 200:  # Checks if the library is valid
     
-            #call cache.py here and install libraries in the new container
-    
             lib_cpath = x + '_cpath'
     
-            if r3.exists(lib_cpath) == True:
-                ## Use the path, install and call cache.py
+            if r3.exists(lib_cpath) == True: # Check if the library is already present in the cache
     
                 whl_path = r3.get(lib_cpath)
     
@@ -173,7 +180,7 @@ def libraries(container):
                 cache(x, install_time)
 
     
-            else:
+            else: #Download the library if it is not present in cache
                 
                 print("Downloading libraries as it's not found in cache...\n")
 
@@ -185,15 +192,12 @@ def libraries(container):
 
         return (install_time)
 
+
+# Resource manager to identify resources for execution
+
 def resource(env):
     
     
-    #cmd = "docker ps | grep -i %s | grep -i warm | grep -v prewarm | wc -l"%(env)
-    #cmd = 'docker ps --filter "name=warm0_" | grep %s | wc -l'%(env)
-    #cont = os.popen(cmd).read().strip()
-    #print ("\nNo. of warm {} containers running - {}\n".format(env,cont))
-
-
     cmd1 = "docker ps | grep -i _%s3 | grep -i warm | grep -v prewarm | wc -l"%(env)
     warm = os.popen(cmd1).read().strip()
 
@@ -219,7 +223,7 @@ def resource(env):
 
         execution_type = "cold"
         
-        container = 'warm0_10_python2'
+        container = 'warm0_10_python2'  # Name allocated for first cold container created
         cmd = "docker run -v /root/.cache/:/cache/ -dit --name %s python:2.7-alpine"%container
         os.popen(cmd)
 
@@ -234,9 +238,9 @@ def resource(env):
         writer.writerow([request_time, function, total_time, execution_type])
 
 
+# To execute the function and then stop the container
     
-def execute(container,request): #to execute the function and then stop the container
-
+def execute(container,request): 
 
     cmd0 = "docker cp {0} {1}:/".format(request, container)
     os.popen(cmd0)
@@ -246,11 +250,11 @@ def execute(container,request): #to execute the function and then stop the conta
     cmd1 = 'echo $(($(date +%s%N)/1000000))'
     exec_start = os.popen(cmd1).read().strip()
 
+    # Print output of script execution on screen
+
     print ("Output of the execution is:\n")
     print ("{")
 
-    #cmd2 = "docker exec -i {0} python /{1} && echo $(($(date +%s%N)/1000000)) > /tmp/exec_log".format(container,request)
-    #request = "/test.py"
     cmd2 = "docker exec -i {0} python /{1} && echo $(($(date +%s%N)/1000000)) > /tmp/exec_log".format(container,request)
     os.system(cmd2)
 
@@ -271,6 +275,8 @@ def execute(container,request): #to execute the function and then stop the conta
 
     return (execution_time)
 
+
+# Cache manager to retrieve and update information about the dependent libraries
 
 def cache(lib, install_time):
 
@@ -295,9 +301,9 @@ def cache(lib, install_time):
     entry = r1.exists(lib_freq)
     time = r5.exists(lib_install_time)
     freq = r1.get(lib_freq)
-    #print(r1.get(lib_freq))
-    #print(freq)
 
+
+    # Updates the last used date of the library 
 
     if time == 0:
         r5.set(lib_install_time, install_time)
@@ -307,6 +313,9 @@ def cache(lib, install_time):
         
         if int(time_old) < int(install_time):
             r5.set(lib_install_time, install_time)
+
+
+    # Updates the frequency of the library
 
     if entry == 0:
         r1.set(lib_freq,'NEW')
@@ -346,7 +355,7 @@ def cache(lib, install_time):
     elif (entry !=0 and freq == 'FREQUENT'):
 
         # Check last used date of library, if it's used more than 10 days before then delete it and set status again to infrequent
-        # print("The library is used frequently!")
+
         r4.set(lib_last_used,today)
 
     now = datetime.now()
@@ -359,12 +368,10 @@ def cache(lib, install_time):
 
     if difference == 0:
 
-        ##remove the cache
-        #print ("Library was used very recently!")
-
         r1.exists(lib_cpath)
-        #print (path)
 
+
+# Forecast function to start containers according to time scheduled in forecast.csv
 
 def forecast():
 
